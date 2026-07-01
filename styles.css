@@ -176,6 +176,7 @@ h1 {
   font-size: 0.82rem;
   color: #4c5b74;
   line-height: 1.35;
+  overflow-wrap: anywhere;
 }
 
 .job-card .muted {
@@ -195,8 +196,31 @@ h1 {
 }
 
 .job-card .note-line {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
   color: #5f6e86;
   font-size: 0.78rem;
+  margin-top: 4px;
+}
+
+.job-card .note-line.note-expanded {
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
+}
+
+.job-card .read-more {
+  border: none;
+  background: transparent;
+  color: #3557d4;
+  padding: 0;
+  margin: 2px 0 0;
+  font-size: 0.74rem;
+  cursor: pointer;
+  text-align: left;
 }
 
 .card-actions {

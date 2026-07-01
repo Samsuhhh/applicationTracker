@@ -71,12 +71,17 @@ function render() {
       columnJobs.forEach((job) => {
         const card = document.createElement('article');
         card.className = 'job-card';
+        const notesText = job.notes || '';
+        const previewText = notesText.length > 120 ? `${notesText.slice(0, 117)}...` : notesText;
+        const hasLongNotes = notesText.length > 120;
+
         card.innerHTML = `
           <h4>${job.company}</h4>
           <p><strong>${job.role}</strong></p>
           ${job.pay ? `<p class="pay-pill">${job.pay}</p>` : ''}
           ${job.appliedDate ? `<p class="muted">Applied ${job.appliedDate}</p>` : ''}
-          ${job.notes ? `<p class="note-line">${job.notes}</p>` : ''}
+          ${notesText ? `<p class="note-line ${hasLongNotes ? 'note-collapsed' : ''}" data-full-text="${notesText}">${hasLongNotes ? previewText : notesText}</p>` : ''}
+          ${hasLongNotes ? '<button class="read-more" data-action="toggle-notes" data-id="' + job.id + '">Read more</button>' : ''}
           <div class="card-actions">
             <button data-action="back" data-id="${job.id}">←</button>
             <button data-action="forward" data-id="${job.id}">→</button>
@@ -98,6 +103,18 @@ pipelineContainer?.addEventListener('click', (event) => {
   }
 
   const { action, id } = button.dataset;
+
+  if (action === 'toggle-notes') {
+    const noteNode = button.previousElementSibling;
+    if (noteNode?.dataset.fullText) {
+      const isExpanded = button.textContent === 'Show less';
+      button.textContent = isExpanded ? 'Read more' : 'Show less';
+      noteNode.textContent = isExpanded ? `${noteNode.dataset.fullText.slice(0, 117)}...` : noteNode.dataset.fullText;
+      noteNode.classList.toggle('note-expanded', !isExpanded);
+    }
+    return;
+  }
+
   jobs = jobs.filter((job) => {
     if (job.id !== id) {
       return true;
