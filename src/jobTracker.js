@@ -42,6 +42,19 @@ export function moveJobStatus(job, direction) {
   };
 }
 
+export function updateJob(job, updates) {
+  return {
+    ...job,
+    ...updates,
+    company: updates.company?.trim() ?? job.company,
+    role: updates.role?.trim() ?? job.role,
+    notes: updates.notes?.trim() ?? job.notes,
+    pay: updates.pay?.trim() ?? job.pay,
+    link: updates.link?.trim() ?? job.link,
+    appliedDate: updates.appliedDate ?? job.appliedDate,
+  };
+}
+
 export function sortJobs(jobs) {
   return [...jobs].sort((left, right) => {
     const leftOrder = STATUSES.find((entry) => entry.id === left.status)?.order ?? 0;

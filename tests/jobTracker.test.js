@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import { createJob, getStats, moveJobStatus, sortJobs } from '../src/jobTracker.js';
+import { createJob, getStats, moveJobStatus, sortJobs, updateJob } from '../src/jobTracker.js';
 
 test('createJob normalizes a new application', () => {
   const job = createJob({
@@ -63,4 +63,15 @@ test('sortJobs orders cards by status and recency', () => {
 
   assert.equal(sorted[0].status, 'applied');
   assert.equal(sorted[1].status, 'rejected');
+});
+
+test('updateJob replaces only the requested fields', () => {
+  const job = createJob({ company: 'Acme', role: 'Engineer', status: 'wishlist', notes: 'Old note', pay: '$100k' });
+
+  const updated = updateJob(job, { role: 'Senior Engineer', notes: 'New note' });
+
+  assert.equal(updated.company, 'Acme');
+  assert.equal(updated.role, 'Senior Engineer');
+  assert.equal(updated.notes, 'New note');
+  assert.equal(updated.pay, '$100k');
 });

@@ -1,4 +1,4 @@
-import { STATUSES, createJob, getStats, moveJobStatus, sortJobs } from './src/jobTracker.js';
+import { STATUSES, createJob, getStats, moveJobStatus, sortJobs, updateJob } from './src/jobTracker.js';
 
 const STORAGE_KEY = 'application-tracker-jobs';
 const form = document.querySelector('#job-form');
@@ -6,24 +6,47 @@ const statsContainer = document.querySelector('#stats');
 const pipelineContainer = document.querySelector('#pipeline');
 
 let jobs = loadJobs();
+let editingJobId = null;
 
 form?.addEventListener('submit', (event) => {
   event.preventDefault();
   const formData = new FormData(form);
   const appliedDate = formData.get('appliedDate')?.toString() || formatDate(new Date());
-  const nextJob = createJob({
-    company: formData.get('company')?.toString() ?? '',
-    role: formData.get('role')?.toString() ?? '',
-    status: formData.get('status')?.toString() ?? 'wishlist',
-    appliedDate,
-    notes: formData.get('notes')?.toString() ?? '',
-    pay: formData.get('pay')?.toString() ?? '',
-    link: formData.get('link')?.toString() ?? '',
-  });
 
-  jobs = [nextJob, ...jobs];
+  if (editingJobId) {
+    jobs = jobs.map((job) => {
+      if (job.id !== editingJobId) {
+        return job;
+      }
+
+      return updateJob(job, {
+        company: formData.get('company')?.toString() ?? '',
+        role: formData.get('role')?.toString() ?? '',
+        status: formData.get('status')?.toString() ?? 'wishlist',
+        appliedDate,
+        notes: formData.get('notes')?.toString() ?? '',
+        pay: formData.get('pay')?.toString() ?? '',
+        link: formData.get('link')?.toString() ?? '',
+      });
+    });
+    editingJobId = null;
+  } else {
+    const nextJob = createJob({
+      company: formData.get('company')?.toString() ?? '',
+      role: formData.get('role')?.toString() ?? '',
+      status: formData.get('status')?.toString() ?? 'wishlist',
+      appliedDate,
+      notes: formData.get('notes')?.toString() ?? '',
+      pay: formData.get('pay')?.toString() ?? '',
+      link: formData.get('link')?.toString() ?? '',
+    });
+
+    jobs = [nextJob, ...jobs];
+  }
+
   persistJobs();
   form.reset();
+  setFormMode(false);
   render();
 });
 
@@ -46,6 +69,42 @@ function formatDate(date) {
   const month = String(date.getMonth() + 1).padStart(2, '0');
   const day = String(date.getDate()).padStart(2, '0');
   return `${year}-${month}-${day}`;
+}
+
+function setFormMode(isEditing, job = null) {
+  const submitButton = form?.querySelector('button[type="submit"]');
+  if (!submitButton) {
+    return;
+  }
+
+  submitButton.textContent = isEditing ? 'Save changes' : 'Save application';
+  form?.querySelector('h2')?.replaceChildren(document.createTextNode(isEditing ? 'Edit application' : 'Add a new role'));
+
+  if (!job) {
+    form?.reset();
+    const today = formatDate(new Date());
+    const appliedDateInput = form?.querySelector('input[name="appliedDate"]');
+    if (appliedDateInput) {
+      appliedDateInput.value = today;
+    }
+    return;
+  }
+
+  const companyInput = form?.querySelector('input[name="company"]');
+  const roleInput = form?.querySelector('input[name="role"]');
+  const statusInput = form?.querySelector('select[name="status"]');
+  const appliedDateInput = form?.querySelector('input[name="appliedDate"]');
+  const payInput = form?.querySelector('input[name="pay"]');
+  const linkInput = form?.querySelector('input[name="link"]');
+  const notesInput = form?.querySelector('textarea[name="notes"]');
+
+  if (companyInput) companyInput.value = job.company;
+  if (roleInput) roleInput.value = job.role;
+  if (statusInput) statusInput.value = job.status;
+  if (appliedDateInput) appliedDateInput.value = job.appliedDate || formatDate(new Date());
+  if (payInput) payInput.value = job.pay || '';
+  if (linkInput) linkInput.value = job.link || '';
+  if (notesInput) notesInput.value = job.notes || '';
 }
 
 function render() {
@@ -93,6 +152,7 @@ function render() {
           ${hasLongNotes ? '<button class="read-more" data-action="toggle-notes" data-id="' + job.id + '">Read more</button>' : ''}
           <div class="card-actions">
             ${job.link ? `<a class="card-link" href="${job.link}" target="_blank" rel="noopener noreferrer">Open</a>` : ''}
+            <button data-action="edit" data-id="${job.id}">Edit</button>
             <button data-action="back" data-id="${job.id}">←</button>
             <button data-action="forward" data-id="${job.id}">→</button>
             <button class="danger" data-action="delete" data-id="${job.id}">×</button>
@@ -113,6 +173,16 @@ pipelineContainer?.addEventListener('click', (event) => {
   }
 
   const { action, id } = button.dataset;
+
+  if (action === 'edit') {
+    const targetJob = jobs.find((job) => job.id === id);
+    if (targetJob) {
+      editingJobId = targetJob.id;
+      setFormMode(true, targetJob);
+      form?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+    return;
+  }
 
   if (action === 'toggle-notes') {
     const noteNode = button.previousElementSibling;
