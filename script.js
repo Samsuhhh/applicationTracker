@@ -10,13 +10,15 @@ let jobs = loadJobs();
 form?.addEventListener('submit', (event) => {
   event.preventDefault();
   const formData = new FormData(form);
+  const appliedDate = formData.get('appliedDate')?.toString() || formatDate(new Date());
   const nextJob = createJob({
     company: formData.get('company')?.toString() ?? '',
     role: formData.get('role')?.toString() ?? '',
     status: formData.get('status')?.toString() ?? 'wishlist',
-    appliedDate: formData.get('appliedDate')?.toString() ?? '',
+    appliedDate,
     notes: formData.get('notes')?.toString() ?? '',
     pay: formData.get('pay')?.toString() ?? '',
+    link: formData.get('link')?.toString() ?? '',
   });
 
   jobs = [nextJob, ...jobs];
@@ -37,6 +39,13 @@ function loadJobs() {
 
 function persistJobs() {
   window.localStorage.setItem(STORAGE_KEY, JSON.stringify(jobs));
+}
+
+function formatDate(date) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const day = String(date.getDate()).padStart(2, '0');
+  return `${year}-${month}-${day}`;
 }
 
 function render() {
@@ -83,6 +92,7 @@ function render() {
           ${notesText ? `<p class="note-line ${hasLongNotes ? 'note-collapsed' : ''}" data-full-text="${notesText}">${hasLongNotes ? previewText : notesText}</p>` : ''}
           ${hasLongNotes ? '<button class="read-more" data-action="toggle-notes" data-id="' + job.id + '">Read more</button>' : ''}
           <div class="card-actions">
+            ${job.link ? `<a class="card-link" href="${job.link}" target="_blank" rel="noopener noreferrer">Open</a>` : ''}
             <button data-action="back" data-id="${job.id}">←</button>
             <button data-action="forward" data-id="${job.id}">→</button>
             <button class="danger" data-action="delete" data-id="${job.id}">×</button>

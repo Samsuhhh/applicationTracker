@@ -230,12 +230,23 @@ h1 {
   margin-top: 8px;
 }
 
-.card-actions button {
+.card-actions button,
+.card-actions .card-link {
   background: #f1f4fb;
   color: #31415c;
   padding: 5px 8px;
   font-size: 0.75rem;
   min-width: 30px;
+  border-radius: 999px;
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-actions .card-link {
+  background: #e9f2ff;
+  color: #3557d4;
 }
 
 .card-actions .danger {
