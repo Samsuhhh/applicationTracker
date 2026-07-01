@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Application Tracker</title>
+    <link rel="stylesheet" href="./styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="hero">
+        <div>
+          <p class="eyebrow">Workflow</p>
+          <h1>Track every application from idea to offer.</h1>
+          <p class="hero-copy">
+            Capture the roles you want, move them through your pipeline, and keep a simple record of your progress.
+          </p>
+        </div>
+        <form id="job-form" class="job-form">
+          <h2>Add a new role</h2>
+          <label>
+            Company
+            <input name="company" required placeholder="Example Co" />
+          </label>
+          <label>
+            Role
+            <input name="role" required placeholder="Product Designer" />
+          </label>
+          <label>
+            Stage
+            <select name="status">
+              <option value="wishlist">Wishlist</option>
+              <option value="applied" selected>Applied</option>
+              <option value="interview">Interview</option>
+              <option value="offer">Offer</option>
+              <option value="rejected">Rejected</option>
+            </select>
+          </label>
+          <label>
+            Applied date
+            <input name="appliedDate" type="date" />
+          </label>
+          <label>
+            Pay
+            <input name="pay" placeholder="$140,000" />
+          </label>
+          <label>
+            Notes
+            <textarea name="notes" rows="3" placeholder="What stood out? Any follow-up next steps?"></textarea>
+          </label>
+          <button type="submit">Save application</button>
+        </form>
+      </header>
+
+      <section class="stats" id="stats"></section>
+
+      <section class="pipeline" id="pipeline"></section>
+    </main>
+
+    <script type="module" src="./script.js"></script>
+  </body>
+</html>
