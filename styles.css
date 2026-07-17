@@ -28,11 +28,29 @@ textarea {
 }
 
 .hero {
-  display: grid;
-  grid-template-columns: 1.2fr 0.8fr;
-  gap: 24px;
-  align-items: start;
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 20px;
   margin-bottom: 24px;
+}
+
+.new-application-button {
+  border: none;
+  border-radius: 999px;
+  padding: 12px 20px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #4c6ef5, #7c8cff);
+  color: white;
+  font-weight: 700;
+  font-size: 0.95rem;
+  white-space: nowrap;
+  transition: transform 160ms ease;
+}
+
+.new-application-button:hover {
+  transform: translateY(-1px);
 }
 
 .eyebrow {
@@ -56,7 +74,6 @@ h1 {
   margin: 0;
 }
 
-.job-form,
 .stats,
 .pipe-column {
   background: rgba(255, 255, 255, 0.9);
@@ -66,15 +83,8 @@ h1 {
 }
 
 .job-form {
-  border-radius: 20px;
-  padding: 20px;
   display: grid;
   gap: 12px;
-}
-
-.job-form h2 {
-  margin: 0 0 4px;
-  font-size: 1.1rem;
 }
 
 .job-form label {
@@ -82,6 +92,20 @@ h1 {
   gap: 6px;
   font-size: 0.95rem;
   color: #31415c;
+}
+
+.job-form .checkbox-label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  background: #eef4ff;
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.job-form .checkbox-label input {
+  width: auto;
 }
 
 .job-form input,
@@ -263,11 +287,179 @@ h1 {
   font-size: 0.95rem;
 }
 
-@media (max-width: 980px) {
-  .hero {
-    grid-template-columns: 1fr;
-  }
+.experience-bank {
+  margin-top: 24px;
+  background: rgba(255, 255, 255, 0.9);
+  border: 1px solid #e3e8f1;
+  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
+  border-radius: 20px;
+  padding: 20px;
+}
 
+.experience-bank h2 {
+  margin: 0 0 8px;
+  font-size: 1.1rem;
+}
+
+.experience-bank textarea {
+  width: 100%;
+  margin-top: 12px;
+  border: 1px solid #dce3ee;
+  border-radius: 10px;
+  padding: 12px;
+  background: #fcfdff;
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  resize: vertical;
+}
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  z-index: 100;
+}
+
+.modal.hidden {
+  display: none;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  width: min(640px, 100%);
+  max-height: 85vh;
+  overflow-y: auto;
+  box-shadow: 0 30px 60px rgba(15, 23, 42, 0.25);
+}
+
+.modal-content h2 {
+  margin: 0 0 12px;
+  font-size: 1.1rem;
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.modal-header h2 {
+  margin: 0;
+}
+
+.icon-button {
+  border: none;
+  background: transparent;
+  color: #66758e;
+  cursor: pointer;
+  font-size: 1.4rem;
+  line-height: 1;
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+.icon-button:hover {
+  background: #f1f4fb;
+}
+
+.modal-content label {
+  display: grid;
+  gap: 6px;
+  font-size: 0.95rem;
+  color: #31415c;
+}
+
+.modal-content textarea {
+  border: 1px solid #dce3ee;
+  border-radius: 10px;
+  padding: 10px 12px;
+  background: #fcfdff;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.modal-actions button {
+  border: none;
+  border-radius: 999px;
+  padding: 10px 16px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #4c6ef5, #7c8cff);
+  color: white;
+  font-weight: 700;
+}
+
+.modal-actions button.secondary {
+  background: #f1f4fb;
+  color: #31415c;
+  font-weight: 600;
+}
+
+.hidden {
+  display: none;
+}
+
+.api-banner {
+  background: #fdecea;
+  border: 1px solid #f5c2c0;
+  color: #93231f;
+  border-radius: 12px;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+  font-size: 0.9rem;
+}
+
+.import-panel {
+  background: #eef4ff;
+  border: 1px solid #cddcf6;
+  border-radius: 12px;
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+
+.import-panel .muted {
+  margin: 0 0 10px;
+  font-size: 0.85rem;
+}
+
+.import-panel button {
+  border: none;
+  border-radius: 999px;
+  padding: 8px 14px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #4c6ef5, #7c8cff);
+  color: white;
+  font-weight: 700;
+}
+
+#import-status {
+  margin: 8px 0 0;
+  font-size: 0.85rem;
+}
+
+#resume-output {
+  white-space: pre-wrap;
+  background: #f7f9fe;
+  border-radius: 10px;
+  padding: 14px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+  max-height: 55vh;
+  overflow-y: auto;
+}
+
+@media (max-width: 980px) {
   .stats,
   .pipeline {
     grid-template-columns: 1fr 1fr;

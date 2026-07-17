@@ -1,0 +1,210 @@
+Transfer document: job application tracker
+
+Overview
+
+This project is a lightweight job application tracker built as a static web app. It lets a user track applications through a pipeline of stages, add notes, save pay information, store a job posting link, and edit existing entries. The app is currently hosted as a static site and is connected to GitHub for deployment via Cloudflare Pages.
+
+Current state
+
+The app is functioning as a single-page web experience with:
+- a form to create new applications
+- a kanban-style pipeline with columns for stages
+- compact cards inside each column
+- note truncation with a “Read more” interaction
+- pay highlighting
+- a direct “Open” link button for job posting URLs
+- edit mode for existing cards
+- local browser storage persistence
+
+Core files
+
+- index.html
+  - Main UI shell
+  - Contains the add/edit form and the pipeline sections
+
+- styles.css
+  - All visual styling
+  - Includes compact card layout, button styling, note truncation, and pay pill styling
+
+- script.js
+  - Main application behavior
+  - Handles:
+    - form submission
+    - creating new jobs
+    - editing existing jobs
+    - moving jobs between stages
+    - deleting jobs
+    - rendering cards and stats
+    - reading/writing local storage
+    - note expand/collapse behavior
+
+- src/jobTracker.js
+  - Pure logic for job model creation and job state operations
+  - Includes:
+    - stage definitions
+    - job creation
+    - job status movement
+    - job editing/update logic
+    - sorting jobs by stage and recency
+    - stats computation
+
+- tests/jobTracker.test.js
+  - Regression tests for core logic
+  - Covers creation, pay preservation, stage movement, sorting, and editing
+
+- wrangler.jsonc
+  - Static deployment config for Cloudflare-style hosting
+  - Important for ensuring the app is treated as a static site rather than a Worker deployment
+
+Product behavior
+
+Application form
+
+The form currently supports:
+- company
+- role
+- stage/status
+- applied date
+- job posting link
+- pay
+- notes
+
+Important behavior:
+- Applied date defaults to today automatically when a new application is created
+- The date input can still be manually overridden if desired
+- The form switches between “create” and “edit” modes depending on whether the user is modifying an existing card
+
+Pipeline / cards
+
+Each application appears as a compact card inside a stage column:
+- Wishlist
+- Applied
+- Interview
+- Offer
+- Rejected
+
+Each card shows:
+- company
+- role
+- pay (if present)
+- applied date (if present)
+- note preview
+- “Read more” button for long notes
+- “Open” link button if a posting URL exists
+- edit button
+- move backward / forward buttons
+- delete button
+
+Important UX nuance
+
+The note text is intentionally compact:
+- it truncates to two lines
+- it uses ellipsis
+- it expands on demand with a small “Read more” interaction
+
+This was done to prevent cards from stretching horizontally and to keep the board visually compact.
+
+Data model
+
+Each job entry currently includes:
+- id
+- company
+- role
+- status
+- appliedDate
+- notes
+- pay
+- link
+- createdAt
+
+Storage
+
+The app persists data in browser localStorage under:
+- application-tracker-jobs
+
+This means:
+- data is currently local to the browser/device
+- it is not yet backed by a database or remote API
+- refreshing the page preserves entries
+
+Deployment context
+
+The app has already been:
+- pushed to GitHub
+- configured for static hosting
+- prepared for Cloudflare Pages deployment
+
+The deployment path is based on:
+- static files
+- no build step required
+- GitHub-based deployment
+
+Important nuance
+
+Earlier deployment attempts were affected by Cloudflare trying to treat the project like a Worker-style deployment. The current static setup was corrected using:
+- wrangler.jsonc
+
+This matters because any future deployment changes should preserve the static-site interpretation.
+
+Current implementation details worth preserving
+
+- Keep the UI lightweight and compact.
+- Preserve the localStorage-based workflow unless a backend is introduced.
+- Preserve the edit flow as part of the card UI rather than a separate modal.
+- Keep the note preview behavior compact and non-intrusive.
+- Preserve the “Open” link button as a lightweight action that only appears when a link exists.
+- Keep the form submission logic simple and deterministic.
+
+Likely next steps for the next agent
+
+If the next agent continues this project, the most natural next steps are:
+
+1. Add persistence beyond browser storage
+- move to a backend or database
+- support syncing across devices
+
+2. Improve form UX
+- add validation
+- add richer date handling
+- add more structured metadata
+
+3. Improve job-link handling
+- support link validation
+- support link previews
+- support opening in a new tab consistently
+
+4. Improve card interactions
+- add drag-and-drop between stages
+- add inline editing without form scrolling
+- add better empty states
+
+5. Add import/export
+- export to JSON/CSV
+- import existing tracker data
+
+6. Add analytics / reporting
+- count applications by company
+- track response rates
+- highlight offers vs rejections
+
+Important caveats
+
+- The app is intentionally simple and not yet production-grade for multi-user or multi-device use.
+- The current UI assumes a single user and local browser storage.
+- The app is not yet wired to a backend, so any persistence ambition should be treated as a larger feature addition.
+- Cloudflare deployment should stay configured as a static app.
+
+Suggested handoff summary
+
+The app already does the main job of tracking applications. The next meaningful evolution would be either:
+- a backend-backed version for persistence and sharing, or
+- richer UX polish around editing, filtering, and job-link workflows.
+
+If another agent picks this up, they should preserve the existing architecture and avoid introducing a complex framework unless the user explicitly asks for it.
+
+
+Moving forward:
+I want this to start leveraging AI a bit more.
+- when I add a job to the wishlist, I want an AI agent to give me an updated version of my resume that is tailored to the job description provided (or link provided)
+    - We can work on a full extensive list of experience that would allow you to draw from and customize for each job
+    - You can ask me questions if we need more experience and where we can stretch the truth a bit

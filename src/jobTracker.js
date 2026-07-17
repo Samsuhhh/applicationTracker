@@ -10,12 +10,23 @@ function normalizeStatus(status) {
   return STATUSES.some((entry) => entry.id === status) ? status : 'wishlist';
 }
 
-export function createJob({ company, role, status = 'wishlist', appliedDate = '', notes = '', pay = '', link = '' }) {
+export function createJob({
+  company,
+  role,
+  status = 'wishlist',
+  appliedDate = '',
+  deadline = '',
+  notes = '',
+  pay = '',
+  link = '',
+  jobDescription = '',
+}) {
   const trimmedCompany = company.trim();
   const trimmedRole = role.trim();
   const trimmedNotes = notes.trim();
   const trimmedPay = pay.trim();
   const trimmedLink = link.trim();
+  const trimmedJobDescription = jobDescription.trim();
 
   return {
     id: globalThis.crypto?.randomUUID?.() ?? `${Date.now()}-${Math.random().toString(16).slice(2)}`,
@@ -23,9 +34,11 @@ export function createJob({ company, role, status = 'wishlist', appliedDate = ''
     role: trimmedRole,
     status: normalizeStatus(status),
     appliedDate,
+    deadline,
     notes: trimmedNotes,
     pay: trimmedPay,
     link: trimmedLink,
+    jobDescription: trimmedJobDescription,
     createdAt: new Date().toISOString(),
   };
 }
@@ -51,7 +64,9 @@ export function updateJob(job, updates) {
     notes: updates.notes?.trim() ?? job.notes,
     pay: updates.pay?.trim() ?? job.pay,
     link: updates.link?.trim() ?? job.link,
+    jobDescription: updates.jobDescription?.trim() ?? job.jobDescription,
     appliedDate: updates.appliedDate ?? job.appliedDate,
+    deadline: updates.deadline ?? job.deadline,
   };
 }
 

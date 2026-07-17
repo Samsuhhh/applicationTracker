@@ -18,6 +18,18 @@ test('createJob normalizes a new application', () => {
   assert.equal(job.appliedDate, '2026-07-01');
 });
 
+test('createJob captures deadline and trims the job description', () => {
+  const job = createJob({
+    company: 'Contoso',
+    role: 'Product Designer',
+    deadline: '2026-08-01',
+    jobDescription: '  Own the design system.  ',
+  });
+
+  assert.equal(job.deadline, '2026-08-01');
+  assert.equal(job.jobDescription, 'Own the design system.');
+});
+
 test('createJob preserves pay information', () => {
   const job = createJob({
     company: 'Contoso',
@@ -74,4 +86,13 @@ test('updateJob replaces only the requested fields', () => {
   assert.equal(updated.role, 'Senior Engineer');
   assert.equal(updated.notes, 'New note');
   assert.equal(updated.pay, '$100k');
+});
+
+test('updateJob updates deadline and trims a new job description', () => {
+  const job = createJob({ company: 'Acme', role: 'Engineer', deadline: '2026-08-01' });
+
+  const updated = updateJob(job, { deadline: '2026-09-01', jobDescription: '  New JD  ' });
+
+  assert.equal(updated.deadline, '2026-09-01');
+  assert.equal(updated.jobDescription, 'New JD');
 });

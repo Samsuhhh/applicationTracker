@@ -16,8 +16,42 @@
             Capture the roles you want, move them through your pipeline, and keep a simple record of your progress.
           </p>
         </div>
+        <button type="button" id="new-application-button" class="new-application-button">+ New application</button>
+      </header>
+
+      <div id="api-error" class="api-banner hidden" role="alert"></div>
+
+      <div id="import-panel" class="import-panel hidden">
+        <p class="muted">
+          Found applications saved in this browser from before the switch to the server.
+          Importing only sees data in <strong>this browser</strong> &mdash; run it here if you
+          want to keep those entries.
+        </p>
+        <button type="button" id="import-local">Import my existing entries</button>
+        <p id="import-status" class="muted"></p>
+      </div>
+
+      <section class="stats" id="stats"></section>
+
+      <section class="pipeline" id="pipeline"></section>
+
+      <section class="experience-bank">
+        <h2>Experience bank</h2>
+        <p class="hero-copy">
+          Everything here gets sent to the AI when tailoring a resume for a job. Add roles, bullets, projects,
+          or anything else worth drawing from &mdash; edit freely, it saves automatically.
+        </p>
+        <textarea id="experience-bank" rows="16" spellcheck="false"></textarea>
+      </section>
+    </main>
+
+    <div id="job-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="job-modal-title">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="job-modal-title">Add a new role</h2>
+          <button type="button" id="job-modal-close" class="icon-button" aria-label="Close">&times;</button>
+        </div>
         <form id="job-form" class="job-form">
-          <h2>Add a new role</h2>
           <label>
             Company
             <input name="company" required placeholder="Example Co" />
@@ -41,25 +75,60 @@
             <input name="appliedDate" type="date" value="" />
           </label>
           <label>
-            Job posting link
-            <input name="link" type="url" placeholder="https://example.com/job" />
+            Deadline
+            <input name="deadline" type="date" />
           </label>
           <label>
             Pay
             <input name="pay" placeholder="$140,000" />
           </label>
           <label>
+            Job posting link
+            <input name="link" type="url" placeholder="https://example.com/job" />
+          </label>
+          <label>
+            Job description
+            <textarea name="jobDescription" rows="4" placeholder="Paste the JD here (optional, enables tailoring)"></textarea>
+          </label>
+          <label>
             Notes
             <textarea name="notes" rows="3" placeholder="What stood out? Any follow-up next steps?"></textarea>
           </label>
-          <button type="submit">Save application</button>
+          <label class="checkbox-label">
+            <input type="checkbox" name="tailorNow" />
+            Tailor resume + cover letter now
+          </label>
+          <div class="modal-actions">
+            <button type="submit">Save application</button>
+            <button type="button" id="job-cancel" class="secondary">Cancel</button>
+          </div>
         </form>
-      </header>
+      </div>
+    </div>
 
-      <section class="stats" id="stats"></section>
-
-      <section class="pipeline" id="pipeline"></section>
-    </main>
+    <div id="resume-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2>Application plan</h2>
+        <div id="resume-modal-form">
+          <label>
+            Job description
+            <textarea id="resume-job-description" rows="8" placeholder="Paste the job description here"></textarea>
+          </label>
+          <div class="modal-actions">
+            <button type="button" id="resume-generate">Generate</button>
+            <button type="button" id="resume-cancel" class="secondary">Cancel</button>
+          </div>
+          <p id="resume-status" class="muted"></p>
+        </div>
+        <div id="resume-modal-result" class="hidden">
+          <pre id="resume-output"></pre>
+          <div class="modal-actions">
+            <button type="button" id="resume-copy">Copy</button>
+            <button type="button" id="resume-close" class="secondary">Close</button>
+          </div>
+        </div>
+      </div>
+    </div>
 
     <script type="module" src="./script.js"></script>
   </body>

@@ -1,9 +1,23 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "application-tracker",
-  "compatibility_date": "2026-07-01",
-  "assets": {
-    "directory": "./",
-    "not_found_handling": "single-page-application"
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "application-tracker",
+	"compatibility_date": "2026-07-01",
+	"main": "worker.js",
+	"assets": {
+		"directory": "./",
+		"binding": "ASSETS",
+		"not_found_handling": "single-page-application",
+		"run_worker_first": ["/api/*"]
+	},
+	// D1 database for CareerOS structured records (applications, materials, etc.).
+	// After running `wrangler d1 create careeros`, paste the printed database_id below.
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "careeros",
+			"database_id": "8732434b-882a-4f43-b09a-7419303559d5"
+		}
+	]
+	// R2 bucket (rendered DOCX/PDF/zips) gets added in a later increment:
+	// "r2_buckets": [{ "binding": "FILES", "bucket_name": "careeros" }]
 }
