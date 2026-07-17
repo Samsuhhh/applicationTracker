@@ -287,33 +287,6 @@ h1 {
   font-size: 0.95rem;
 }
 
-.experience-bank {
-  margin-top: 24px;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid #e3e8f1;
-  box-shadow: 0 18px 45px rgba(15, 23, 42, 0.06);
-  border-radius: 20px;
-  padding: 20px;
-}
-
-.experience-bank h2 {
-  margin: 0 0 8px;
-  font-size: 1.1rem;
-}
-
-.experience-bank textarea {
-  width: 100%;
-  margin-top: 12px;
-  border: 1px solid #dce3ee;
-  border-radius: 10px;
-  padding: 12px;
-  background: #fcfdff;
-  font-family: 'SFMono-Regular', Consolas, monospace;
-  font-size: 0.85rem;
-  line-height: 1.5;
-  resize: vertical;
-}
-
 .modal {
   position: fixed;
   inset: 0;
@@ -471,4 +444,59 @@ h1 {
   .pipeline {
     grid-template-columns: 1fr;
   }
+}
+
+/* Materials modal */
+.materials-note {
+  margin-top: 16px;
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+
+.material-row {
+  border: 1px solid #dce4f2;
+  border-radius: 10px;
+  padding: 12px 14px;
+  margin-bottom: 10px;
+  background: #fff;
+}
+
+.material-head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+  flex-wrap: wrap;
+}
+
+.material-status {
+  margin-left: auto;
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef2f9;
+  color: #4a5568;
+}
+
+.material-status.status-ready {
+  background: #e3f6ec;
+  color: #1a7a45;
+}
+
+.material-status.status-rendering,
+.material-status.status-queued {
+  background: #fff5e0;
+  color: #8a5a00;
+}
+
+.material-status.status-error {
+  background: #fde8e8;
+  color: #b42318;
+}
+
+.material-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
 }

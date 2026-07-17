@@ -1,46 +1,34 @@
-const ASSESSMENT_SYSTEM_PROMPT = `You are a skeptical senior recruiter and career strategist, evaluating a candidate for a specific role AT the hiring company — not the candidate's advocate, but the person deciding whether to move them forward.
-
-Be a sparring partner, not a cheerleader. Push back on weak fits. If a role isn't worth applying to, say so plainly and explain why. Do not invent strengths that aren't in the experience bank, and do not soften real gaps to make the candidate feel better.
-
-Given the candidate's experience bank and the job description, write a hire-likelihood assessment under the heading "## Hire-likelihood assessment":
-- A blunt fit read: strong fit / possible fit / weak fit / not worth applying — with your reasoning
-- The 2-3 strongest points of leverage this candidate actually has for this specific role
-- The real gaps or risks a recruiter at this company would flag
-- One direct recommendation: apply and lean into X, or don't bother unless Y changes`;
-
-const MATERIALS_SYSTEM_PROMPT = `You are a career strategist producing tailored application materials. You'll be given the candidate's experience bank, a job description, and a recruiter's hire-likelihood assessment. Use the assessment to lean into the candidate's real leverage points — don't contradict it or paper over the gaps it named.
-
-Only use experience that appears in the experience bank. Do not invent employers, dates, titles, or metrics. Output clean Markdown, ready to paste elsewhere. Do not wrap the output in a code fence.
-
-Write exactly three sections, each under its own heading:
-
-## Tailored resume
-- Standard sections: Summary, Skills, Experience, Projects, Education (omit sections the experience bank has nothing for)
-- Every experience bullet uses Google's XYZ framing: "Accomplished X by doing Y, measured by Z"
-- Action-verb-first bullets
-- No em dashes anywhere — use commas or periods instead
-- Sized to fit one page at normal resume length. ATS-optimized: plain text, no tables or columns, standard section headers, and keywords from the job description where they're genuinely true of the candidate
-
-## Cover letter
-- Tight, specific to this company and role — reference something real from the job description, not a generic template
-- No generic openers ("I am writing to apply for...", "I hope this finds you well")
-- Grounded only in the experience bank
-
-## LinkedIn outreach message
-- Short (2-4 sentences), specific to the role and company
-- No "I hope this finds you well" or other filler
-- Ends with a clear, low-friction ask`;
+// CareerOS online Worker — API for the SamOS Career domain.
+//
+// Honesty architecture (see SamOS docs/careeros-increment3.md):
+//   - D1 ("DB") is the source of truth for structured records.
+//   - R2 ("FILES") holds rendered material files (DOCX/PDF).
+//   - Tailoring NEVER runs here. It runs in the SamOS career-manager (select from the
+//     real achievement library, never invent), which renders locally and PUBLISHES the
+//     results to /api/materials via the Access service-token-authenticated client.
+//   - The old /api/tailor-resume LLM path fabricated experience and is retired (410).
+//   - Submission is a human Level-3 action; this API only stores/serves, never submits.
 
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
 
-    if (url.pathname === "/api/tailor-resume" && request.method === "POST") {
-      return handleTailorResume(request, env);
+    // Retired: tailoring in the Worker fabricated experience. It now lives in the
+    // disciplined SamOS career-manager, which publishes via /api/materials.
+    if (url.pathname === "/api/tailor-resume") {
+      return jsonError(
+        "Retired. Tailoring runs in the SamOS career-manager (honest, from the real " +
+        "achievement library) and is published via /api/materials. See docs/careeros-increment3.md.",
+        410
+      );
     }
 
     if (url.pathname === "/api/applications" || url.pathname.startsWith("/api/applications/")) {
       return handleApplications(request, env, url);
+    }
+
+    if (url.pathname === "/api/materials" || url.pathname.startsWith("/api/materials/")) {
+      return handleMaterials(request, env, url);
     }
 
     if (url.pathname === "/api/tailor-intent" && request.method === "POST") {
@@ -51,9 +39,8 @@ export default {
   },
 };
 
-// Records intent only — no LLM call. Real tailoring is wired to the SamOS
-// career-manager in a later increment; this just logs an activity row so the
-// intent isn't lost.
+// Records intent only — no LLM call. The real tailoring happens in the SamOS
+// career-manager; this just logs an activity row so the intent isn't lost.
 async function handleTailorIntent(request, env) {
   if (!env.DB) {
     return jsonError("D1 is not bound. Add the d1_databases binding in wrangler.jsonc.", 500);
@@ -72,86 +59,6 @@ async function handleTailorIntent(request, env) {
 
   await logActivity(env, "application", applicationId, "tailor_intent_requested", "human");
   return jsonOk({ ok: true });
-}
-
-async function handleTailorResume(request, env) {
-  if (!env.ANTHROPIC_API_KEY) {
-    return jsonError("Server is not configured with an Anthropic API key.", 500);
-  }
-
-  let body;
-  try {
-    body = await request.json();
-  } catch {
-    return jsonError("Invalid JSON body.", 400);
-  }
-
-  const jobDescription = (body.jobDescription || "").toString().trim();
-  const experienceBank = (body.experienceBank || "").toString().trim();
-
-  if (!jobDescription) {
-    return jsonError("jobDescription is required.", 400);
-  }
-  if (!experienceBank) {
-    return jsonError("experienceBank is required.", 400);
-  }
-
-  const context = `Experience bank:\n\n${experienceBank}\n\n---\n\nJob description:\n\n${jobDescription}`;
-
-  let assessment;
-  try {
-    assessment = await callClaude(env, {
-      model: "claude-opus-4-8",
-      max_tokens: 1024,
-      thinking: { type: "adaptive" },
-      system: ASSESSMENT_SYSTEM_PROMPT,
-      messages: [{ role: "user", content: context }],
-    });
-  } catch (error) {
-    return jsonError(`Anthropic API error (assessment): ${error.message}`, 502);
-  }
-
-  let materials;
-  try {
-    materials = await callClaude(env, {
-      model: "claude-sonnet-5",
-      max_tokens: 4096,
-      output_config: { effort: "medium" },
-      system: MATERIALS_SYSTEM_PROMPT,
-      messages: [
-        {
-          role: "user",
-          content: `${context}\n\n---\n\nRecruiter's hire-likelihood assessment:\n\n${assessment}`,
-        },
-      ],
-    });
-  } catch (error) {
-    return jsonError(`Anthropic API error (materials): ${error.message}`, 502);
-  }
-
-  return new Response(JSON.stringify({ resume: `${assessment}\n\n---\n\n${materials}` }), {
-    headers: { "content-type": "application/json" },
-  });
-}
-
-async function callClaude(env, payload) {
-  const response = await fetch("https://api.anthropic.com/v1/messages", {
-    method: "POST",
-    headers: {
-      "content-type": "application/json",
-      "x-api-key": env.ANTHROPIC_API_KEY,
-      "anthropic-version": "2023-06-01",
-    },
-    body: JSON.stringify(payload),
-  });
-
-  if (!response.ok) {
-    throw new Error(await response.text());
-  }
-
-  const data = await response.json();
-  const textBlock = (data.content || []).find((block) => block.type === "text");
-  return textBlock?.text ?? "";
 }
 
 function jsonError(message, status) {
@@ -173,6 +80,10 @@ function newId(prefix) {
   return `${prefix}-${Date.now()}-${rand}`;
 }
 
+// ---------------------------------------------------------------------------
+// Applications
+// ---------------------------------------------------------------------------
+
 const APP_STATUSES = ["wishlist", "applied", "interview", "offer", "rejected"];
 // Fields a client is allowed to write. id/created_at/updated_at are server-managed.
 const APP_WRITABLE = [
@@ -180,7 +91,7 @@ const APP_WRITABLE = [
   "notes", "follow_up_date", "jd_text", "submitted", "submitted_at", "submitted_material_ids",
 ];
 
-// CRUD for /api/applications. D1-backed. Additive: does not touch tailor-resume or assets.
+// CRUD for /api/applications. D1-backed.
 async function handleApplications(request, env, url) {
   if (!env.DB) {
     return jsonError("D1 is not bound. Add the d1_databases binding in wrangler.jsonc.", 500);
@@ -276,6 +187,201 @@ async function handleApplications(request, env, url) {
     return jsonError(`D1 error: ${err.message}`, 500);
   }
 }
+
+// ---------------------------------------------------------------------------
+// Materials (resume / cover_letter records + their rendered R2 files)
+// ---------------------------------------------------------------------------
+
+const MATERIAL_KINDS = ["resume", "cover_letter"];
+const MATERIAL_RENDER_STATUSES = ["none", "queued", "rendering", "ready", "error"];
+// Writable via POST/PUT. r2_key_* are server-managed (set by the file upload path).
+const MATERIAL_WRITABLE = ["kind", "variant", "application_id", "markdown", "render_status"];
+
+const DOCX_CTYPE = "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
+
+async function handleMaterials(request, env, url) {
+  if (!env.DB) {
+    return jsonError("D1 is not bound. Add the d1_databases binding in wrangler.jsonc.", 500);
+  }
+
+  const parts = url.pathname.split("/").filter(Boolean); // ["api","materials", id?, "file"|"download"?]
+  const id = parts[2];
+  const sub = parts[3]; // "file" | "download" | undefined
+  const method = request.method;
+
+  try {
+    // Collection: GET (list, optional ?application_id=) / POST (create)
+    if (!id) {
+      if (method === "GET") {
+        const appId = url.searchParams.get("application_id");
+        const stmt = appId
+          ? env.DB.prepare("SELECT * FROM materials WHERE application_id = ? ORDER BY updated_at DESC").bind(appId)
+          : env.DB.prepare("SELECT * FROM materials ORDER BY updated_at DESC");
+        const { results } = await stmt.all();
+        return jsonOk({ materials: results || [] });
+      }
+
+      if (method === "POST") {
+        const body = await request.json().catch(() => null);
+        if (!body || !body.kind || !body.markdown) {
+          return jsonError("kind and markdown are required.", 400);
+        }
+        if (!MATERIAL_KINDS.includes(body.kind)) {
+          return jsonError(`kind must be one of: ${MATERIAL_KINDS.join(", ")}`, 400);
+        }
+        // Honest FK: if an application_id is given, it must exist.
+        if (body.application_id) {
+          const app = await env.DB.prepare("SELECT id FROM applications WHERE id = ?").bind(body.application_id).first();
+          if (!app) return jsonError("application_id not found", 404);
+        }
+        const now = new Date().toISOString();
+        const row = {
+          id: newId("mat"),
+          kind: body.kind,
+          variant: body.variant || null,
+          application_id: body.application_id || null,
+          markdown: body.markdown,
+          r2_key_docx: null,
+          r2_key_pdf: null,
+          render_status: MATERIAL_RENDER_STATUSES.includes(body.render_status) ? body.render_status : "none",
+          created_at: now,
+          updated_at: now,
+        };
+        await env.DB.prepare(
+          `INSERT INTO materials
+           (id,kind,variant,application_id,markdown,r2_key_docx,r2_key_pdf,render_status,created_at,updated_at)
+           VALUES (?,?,?,?,?,?,?,?,?,?)`
+        ).bind(
+          row.id, row.kind, row.variant, row.application_id, row.markdown,
+          row.r2_key_docx, row.r2_key_pdf, row.render_status, row.created_at, row.updated_at
+        ).run();
+        await logActivity(env, "material", row.id, "created", "career-manager");
+        return jsonOk({ material: row }, 201);
+      }
+
+      return jsonError("method not allowed", 405);
+    }
+
+    // Item-level file operations
+    if (sub === "file" && method === "PUT") {
+      return handleMaterialUpload(request, env, url, id);
+    }
+    if (sub === "download" && method === "GET") {
+      return handleMaterialDownload(env, url, id);
+    }
+    if (sub) {
+      return jsonError("method not allowed", 405);
+    }
+
+    // Item CRUD
+    if (method === "GET") {
+      const m = await env.DB.prepare("SELECT * FROM materials WHERE id = ?").bind(id).first();
+      return m ? jsonOk({ material: m }) : jsonError("not found", 404);
+    }
+
+    if (method === "PUT" || method === "PATCH") {
+      const body = await request.json().catch(() => null);
+      if (!body) return jsonError("invalid JSON body", 400);
+      const sets = [];
+      const vals = [];
+      for (const key of MATERIAL_WRITABLE) {
+        if (key in body) {
+          if (key === "kind" && !MATERIAL_KINDS.includes(body.kind)) continue;
+          if (key === "render_status" && !MATERIAL_RENDER_STATUSES.includes(body.render_status)) continue;
+          sets.push(`${key} = ?`);
+          vals.push(body[key]);
+        }
+      }
+      if (!sets.length) return jsonError("no writable fields provided", 400);
+      sets.push("updated_at = ?");
+      vals.push(new Date().toISOString());
+      vals.push(id);
+      const res = await env.DB.prepare(
+        `UPDATE materials SET ${sets.join(", ")} WHERE id = ?`
+      ).bind(...vals).run();
+      if (!res.meta || res.meta.changes === 0) return jsonError("not found", 404);
+      await logActivity(env, "material", id, "updated", "career-manager");
+      const m = await env.DB.prepare("SELECT * FROM materials WHERE id = ?").bind(id).first();
+      return jsonOk({ material: m });
+    }
+
+    if (method === "DELETE") {
+      const m = await env.DB.prepare("SELECT * FROM materials WHERE id = ?").bind(id).first();
+      if (!m) return jsonError("not found", 404);
+      if (env.FILES) {
+        if (m.r2_key_docx) await env.FILES.delete(m.r2_key_docx).catch(() => {});
+        if (m.r2_key_pdf) await env.FILES.delete(m.r2_key_pdf).catch(() => {});
+      }
+      await env.DB.prepare("DELETE FROM materials WHERE id = ?").bind(id).run();
+      return jsonOk({ ok: true, id });
+    }
+
+    return jsonError("method not allowed", 405);
+  } catch (err) {
+    return jsonError(`materials error: ${err.message}`, 500);
+  }
+}
+
+// PUT /api/materials/:id/file?format=pdf|docx  — raw file body -> R2, marks render_status=ready.
+async function handleMaterialUpload(request, env, url, id) {
+  if (!env.FILES) {
+    return jsonError("R2 is not bound. Add the r2_buckets binding (FILES -> careeros) in wrangler.jsonc.", 500);
+  }
+  const fmt = url.searchParams.get("format");
+  if (!["pdf", "docx"].includes(fmt)) {
+    return jsonError("format query param must be pdf or docx", 400);
+  }
+  const m = await env.DB.prepare("SELECT * FROM materials WHERE id = ?").bind(id).first();
+  if (!m) return jsonError("not found", 404);
+
+  const body = await request.arrayBuffer();
+  if (!body || body.byteLength === 0) return jsonError("empty file body", 400);
+
+  const key = `materials/${m.application_id || "base"}/${m.id}.${fmt}`;
+  const ctype = fmt === "pdf" ? "application/pdf" : DOCX_CTYPE;
+  await env.FILES.put(key, body, { httpMetadata: { contentType: ctype } });
+
+  const col = fmt === "pdf" ? "r2_key_pdf" : "r2_key_docx";
+  const now = new Date().toISOString();
+  await env.DB.prepare(
+    `UPDATE materials SET ${col} = ?, render_status = 'ready', updated_at = ? WHERE id = ?`
+  ).bind(key, now, id).run();
+  await logActivity(env, "material", id, "rendered", "career-manager", fmt);
+
+  const updated = await env.DB.prepare("SELECT * FROM materials WHERE id = ?").bind(id).first();
+  return jsonOk({ material: updated });
+}
+
+// GET /api/materials/:id/download?format=pdf|docx  — streams the file from R2.
+async function handleMaterialDownload(env, url, id) {
+  if (!env.FILES) return jsonError("R2 is not bound.", 500);
+  const m = await env.DB.prepare("SELECT * FROM materials WHERE id = ?").bind(id).first();
+  if (!m) return jsonError("not found", 404);
+
+  let fmt = url.searchParams.get("format");
+  if (!fmt) fmt = m.r2_key_pdf ? "pdf" : (m.r2_key_docx ? "docx" : null);
+  if (!["pdf", "docx"].includes(fmt)) {
+    return jsonError("no rendered file; specify format=pdf|docx", 400);
+  }
+  const key = fmt === "pdf" ? m.r2_key_pdf : m.r2_key_docx;
+  if (!key) return jsonError(`no ${fmt} file for this material`, 404);
+
+  const obj = await env.FILES.get(key);
+  if (!obj) return jsonError("file missing from storage", 404);
+
+  const ctype = fmt === "pdf" ? "application/pdf" : DOCX_CTYPE;
+  const nameBase = `${m.kind}${m.variant ? "-" + m.variant : ""}`;
+  return new Response(obj.body, {
+    headers: {
+      "content-type": ctype,
+      "content-disposition": `attachment; filename="${nameBase}.${fmt}"`,
+    },
+  });
+}
+
+// ---------------------------------------------------------------------------
+// Activity log (best-effort)
+// ---------------------------------------------------------------------------
 
 async function logActivity(env, entityType, entityId, action, actor, detail = null) {
   try {

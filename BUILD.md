@@ -58,9 +58,10 @@ Behind Cloudflare Access, only you can reach it.
 
 ## Notes / safety
 
-- **Nothing breaks:** the existing kanban (localStorage) and `/api/tailor-resume` are
-  untouched. This increment only *adds* the D1 API. The frontend still uses localStorage
-  until increment 2 migrates it.
+- **Tailoring is not in the Worker:** as of increment 3, `/api/tailor-resume` is retired
+  (returns 410). It fabricated experience. Tailoring now runs in the SamOS career-manager
+  (honest, from the real achievement library) and publishes rendered files to `/api/materials`
+  (D1 + R2). The web app only lists and downloads them; submission stays a human action.
 - **Cost:** D1 free tier (5 GB, 5M reads/day) covers personal use — $0 expected.
 - **Auth:** the API currently trusts whoever reaches it. That's fine *behind Cloudflare
   Access*; before exposing it publicly, add the agent API-token check (a later increment).

@@ -13,7 +13,8 @@
           <p class="eyebrow">Workflow</p>
           <h1>Track every application from idea to offer.</h1>
           <p class="hero-copy">
-            Capture the roles you want, move them through your pipeline, and keep a simple record of your progress.
+            Capture the roles you want, move them through your pipeline, and download the
+            tailored materials CareerOS produces for each one.
           </p>
         </div>
         <button type="button" id="new-application-button" class="new-application-button">+ New application</button>
@@ -34,15 +35,6 @@
       <section class="stats" id="stats"></section>
 
       <section class="pipeline" id="pipeline"></section>
-
-      <section class="experience-bank">
-        <h2>Experience bank</h2>
-        <p class="hero-copy">
-          Everything here gets sent to the AI when tailoring a resume for a job. Add roles, bullets, projects,
-          or anything else worth drawing from &mdash; edit freely, it saves automatically.
-        </p>
-        <textarea id="experience-bank" rows="16" spellcheck="false"></textarea>
-      </section>
     </main>
 
     <div id="job-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="job-modal-title">
@@ -88,7 +80,7 @@
           </label>
           <label>
             Job description
-            <textarea name="jobDescription" rows="4" placeholder="Paste the JD here (optional, enables tailoring)"></textarea>
+            <textarea name="jobDescription" rows="4" placeholder="Paste the JD here (kept for tailoring in CareerOS)"></textarea>
           </label>
           <label>
             Notes
@@ -96,7 +88,7 @@
           </label>
           <label class="checkbox-label">
             <input type="checkbox" name="tailorNow" />
-            Tailor resume + cover letter now
+            Flag for tailoring (CareerOS tailors it from your real achievements, not here)
           </label>
           <div class="modal-actions">
             <button type="submit">Save application</button>
@@ -106,30 +98,26 @@
       </div>
     </div>
 
-    <div id="resume-modal" class="modal hidden">
+    <div id="materials-modal" class="modal hidden" role="dialog" aria-modal="true" aria-labelledby="materials-modal-title">
       <div class="modal-content">
-        <h2>Application plan</h2>
-        <div id="resume-modal-form">
-          <label>
-            Job description
-            <textarea id="resume-job-description" rows="8" placeholder="Paste the job description here"></textarea>
-          </label>
-          <div class="modal-actions">
-            <button type="button" id="resume-generate">Generate</button>
-            <button type="button" id="resume-cancel" class="secondary">Cancel</button>
-          </div>
-          <p id="resume-status" class="muted"></p>
+        <div class="modal-header">
+          <h2 id="materials-modal-title">Materials</h2>
+          <button type="button" id="materials-modal-close" class="icon-button" aria-label="Close">&times;</button>
         </div>
-        <div id="resume-modal-result" class="hidden">
-          <pre id="resume-output"></pre>
-          <div class="modal-actions">
-            <button type="button" id="resume-copy">Copy</button>
-            <button type="button" id="resume-close" class="secondary">Close</button>
-          </div>
+        <p id="materials-subtitle" class="muted"></p>
+        <div id="materials-list"></div>
+        <p class="muted materials-note">
+          Tailored resumes and cover letters are produced in CareerOS from your real achievement
+          library &mdash; never generated in this browser. Once published, they appear here to
+          download. Submitting an application stays your decision.
+        </p>
+        <div class="modal-actions">
+          <button type="button" id="materials-close" class="secondary">Close</button>
         </div>
       </div>
     </div>
 
-    <script type="module" src="./script.js"></script>
+    <!-- Version query busts browser + edge cache on each deploy. Bump on any script.js change. -->
+    <script type="module" src="./script.js?v=3"></script>
   </body>
 </html>

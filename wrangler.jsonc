@@ -1,6 +1,6 @@
 {
 	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "application-tracker",
+	"name": "applicationtracker",
 	"compatibility_date": "2026-07-01",
 	"main": "worker.js",
 	"assets": {
@@ -17,7 +17,13 @@
 			"database_name": "careeros",
 			"database_id": "8732434b-882a-4f43-b09a-7419303559d5"
 		}
+	],
+	// R2 bucket for rendered material files (DOCX/PDF), published by the SamOS career-manager.
+	// Requires `wrangler r2 bucket create careeros` (and R2 enabled once in the dashboard).
+	"r2_buckets": [
+		{
+			"binding": "FILES",
+			"bucket_name": "careeros"
+		}
 	]
-	// R2 bucket (rendered DOCX/PDF/zips) gets added in a later increment:
-	// "r2_buckets": [{ "binding": "FILES", "bucket_name": "careeros" }]
 }
